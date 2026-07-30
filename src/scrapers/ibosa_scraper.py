@@ -6,6 +6,7 @@ de promociones en curso de Ibosa.
 """
 
 import re
+import hashlib
 from urllib.parse import urljoin
 
 import requests
@@ -96,6 +97,10 @@ def search_promotions():
             "saber más",
             "información",
             "contactar",
+            "guía de vivienda protegida",
+            "guía vivienda protegida",
+            "guía",
+            "vivienda protegida",
         }
 
         if (
@@ -108,7 +113,7 @@ def search_promotions():
         bedrooms = extract_bedrooms(full_text)
 
         promotion = {
-            "id": f"ibosa-{abs(hash(url))}",
+            "id": f"ibosa-{hashlib.sha256(url.encode('utf-8')).hexdigest()[:16]}",
             "title": title,
             "city": "Madrid",
             "bedrooms": bedrooms,

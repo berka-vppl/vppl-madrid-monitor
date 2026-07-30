@@ -28,7 +28,17 @@ def create_database():
 
             source TEXT,
 
-            first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            developer TEXT,
+
+            first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+            last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+            score INTEGER DEFAULT 0,
+
+            priority TEXT DEFAULT 'NORMAL',
+
+            status TEXT DEFAULT 'NEW'
 
         )
     """)

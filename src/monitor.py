@@ -1,6 +1,5 @@
 """
-Radar Vivienda Madrid
-Versión 0.1
+Radar de vivienda protegida en Madrid.
 """
 
 from config import (
@@ -17,13 +16,16 @@ from database_manager import (
     total_promotions,
 )
 
-from scrapers.idealista_scraper import search_promotions
+from ranking import calculate_score, get_priority
+from scraper_manager import get_all_promotions
+from telegram_notifier import create_promotion_message, send_telegram_message
+from alert_logger import log_promotion_alert
 
 
 def main():
     print("=" * 45)
     print("        RADAR VIVIENDA MADRID")
-    print("            Versión 0.1")
+    print("             Versión 0.1")
     print("=" * 45)
     print()
 
@@ -36,19 +38,39 @@ def main():
 
     create_database()
 
-    promotions = search_promotions()
+    promotions = get_all_promotions()
 
-    print(f"Promociones encontradas: {len(promotions)}")
+    # Calculamos la puntuación de todas las promociones.
+    for promotion in promotions:
+        promotion["score"] = calculate_score(promotion)
+        promotion["priority"] = get_priority(promotion["score"])
+
+    # Ordenamos de mayor a menor puntuación.
+    promotions.sort(key=lambda promotion: promotion["score"], reverse=True)
+
 
     for promotion in promotions:
+        score = promotion["score"]
+        priority = promotion["priority"]
+
         if not promotion_exists(promotion["id"]):
             save_promotion(promotion)
-            print(f"Nueva promoción: {promotion['title']}")
+            log_promotion_alert(promotion)
+
+            message = create_promotion_message(promotion)
+            send_telegram_message(message)
+
+            print(
+                f"Nueva promoción: {promotion['title']} "
+                f"| {priority} | {score} puntos"
+            )
         else:
-            print(f"Ya existe: {promotion['title']}")
+            print(
+                f"Ya existe: {promotion['title']} "
+                f"| {priority} | {score} puntos"
+            )
 
     print(f"Total en la base de datos: {total_promotions()}")
-
     print("Sistema iniciado correctamente.")
 
 
