@@ -1,0 +1,36 @@
+name: Radar VPPL Madrid
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  ejecutar-radar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar proyecto
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Recuperar base de datos
+        uses: actions/cache@v4
+        with:
+          path: database
+          key: vppl-database-${{ github.run_id }}
+          restore-keys: |
+            vppl-database-
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4 python-dotenv
+
+      - name: Ejecutar radar
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python src/monitor.py
