@@ -5,6 +5,7 @@ DATABASE_PATH = Path("database") / "promotions.db"
 
 
 def create_database():
+    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     connection = sqlite3.connect(DATABASE_PATH)
     cursor = connection.cursor()
