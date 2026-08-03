@@ -48,6 +48,7 @@ def main():
     # Ordenamos de mayor a menor puntuación.
     promotions.sort(key=lambda promotion: promotion["score"], reverse=True)
 
+    print(f"Promociones encontradas: {len(promotions)}")
 
     for promotion in promotions:
         score = promotion["score"]

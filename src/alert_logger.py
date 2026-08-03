@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 
-LOG_DIRECTORY = Path("logs")
+LOG_DIRECTORY = Path(__file__).resolve().parent.parent / "logs"
 ALERT_LOG_PATH = LOG_DIRECTORY / "alerts.log"
 
 

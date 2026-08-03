@@ -6,3 +6,5 @@ database/*.db
 logs/
 
 .env
+.env.*
+!.env.example

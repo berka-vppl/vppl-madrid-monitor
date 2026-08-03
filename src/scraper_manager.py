@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from scrapers.idealista_scraper import search_promotions as search_idealista
 from scrapers.ibosa_scraper import search_promotions as search_ibosa
+from scrapers.emvs_scraper import search_promotions as search_emvs
 
 
 def get_all_promotions():
@@ -16,6 +17,7 @@ def get_all_promotions():
     scrapers = [
         ("Idealista", search_idealista),
         ("Ibosa", search_ibosa),
+        ("EMVS Madrid", search_emvs),
     ]
 
     with ThreadPoolExecutor(max_workers=len(scrapers)) as executor:

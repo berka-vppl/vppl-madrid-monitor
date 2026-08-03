@@ -5,6 +5,7 @@ Configuración general del proyecto
 
 from pathlib import Path
 
+
 # Carpeta raíz del proyecto
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,3 +29,7 @@ TARGET_CITY = "Madrid"
 PREFERRED_BEDROOMS = 4
 
 PENTHOUSE_PRIORITY = True
+
+# Las credenciales se leen de las variables:
+# TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID.
+# Nunca deben guardarse en el repositorio.
