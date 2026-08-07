@@ -1,38 +1,85 @@
-import sys
-import unittest
-from pathlib import Path
+"""
+Tests del sistema de ranking.
+"""
+
+from src.ranking import calculate_score, get_priority
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+def test_four_bedroom_vppl_in_madrid():
+    promotion = {
+        "title": "Promoción VPPL Madrid",
+        "city": "Madrid",
+        "bedrooms": 4,
+        "penthouse": False,
+        "price": None,
+        "protection_type": "VPPL",
+    }
 
-from ranking import calculate_score, get_priority
+    score = calculate_score(promotion)
 
-
-class RankingTests(unittest.TestCase):
-    def test_preferred_penthouse_gets_maximum_priority(self):
-        promotion = {
-            "city": "Madrid",
-            "bedrooms": 4,
-            "penthouse": True,
-            "price": 420000,
-            "title": "Atico en Madrid",
-        }
-        score = calculate_score(promotion)
-        self.assertEqual(score, 180)
-        self.assertEqual(get_priority(score), "PRIORIDAD MÁXIMA")
-
-    def test_basic_promotion_has_normal_priority(self):
-        promotion = {
-            "city": "Getafe",
-            "bedrooms": 2,
-            "penthouse": False,
-            "price": None,
-            "title": "Residencial Sur",
-        }
-        score = calculate_score(promotion)
-        self.assertEqual(score, 0)
-        self.assertEqual(get_priority(score), "PRIORIDAD NORMAL")
+    assert score == 90
+    assert get_priority(score) == "PRIORIDAD MEDIA"
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_four_bedroom_vppb_in_madrid():
+    promotion = {
+        "title": "Promoción VPPB Madrid",
+        "city": "Madrid",
+        "bedrooms": 4,
+        "penthouse": False,
+        "price": None,
+        "protection_type": "VPPB",
+    }
+
+    score = calculate_score(promotion)
+
+    assert score == 80
+    assert get_priority(score) == "PRIORIDAD MEDIA"
+
+
+def test_penthouse_has_maximum_priority():
+    promotion = {
+        "title": "Ático VPPL Madrid",
+        "city": "Madrid",
+        "bedrooms": 4,
+        "penthouse": True,
+        "price": None,
+        "protection_type": "VPPL",
+    }
+
+    score = calculate_score(promotion)
+
+    assert score == 190
+    assert get_priority(score) == "PRIORIDAD MÁXIMA"
+
+
+def test_vppb_three_bedrooms():
+    promotion = {
+        "title": "Residencial Sextans",
+        "city": "Madrid",
+        "bedrooms": 3,
+        "penthouse": False,
+        "price": None,
+        "protection_type": "VPPB",
+    }
+
+    score = calculate_score(promotion)
+
+    assert score == 40
+    assert get_priority(score) == "PRIORIDAD NORMAL"
+
+
+def test_vppl_with_price():
+    promotion = {
+        "title": "Los Ahijones Plaza",
+        "city": "Madrid",
+        "bedrooms": 3,
+        "penthouse": False,
+        "price": 323708,
+        "protection_type": "VPPL",
+    }
+
+    score = calculate_score(promotion)
+
+    assert score == 60
+    assert get_priority(score) == "PRIORIDAD MEDIA"

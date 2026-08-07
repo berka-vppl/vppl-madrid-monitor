@@ -2,24 +2,27 @@
 Radar de vivienda protegida en Madrid.
 """
 
-from config import (
+from .config import (
     TARGET_CITY,
     PREFERRED_BEDROOMS,
     PENTHOUSE_PRIORITY,
     CHECK_INTERVAL_HOURS,
 )
 
-from database_manager import (
+from .database_manager import (
     create_database,
     promotion_exists,
     save_promotion,
     total_promotions,
 )
 
-from ranking import calculate_score, get_priority
-from scraper_manager import get_all_promotions
-from telegram_notifier import create_promotion_message, send_telegram_message
-from alert_logger import log_promotion_alert
+from .ranking import calculate_score, get_priority
+from .scraper_manager import get_all_promotions
+from .telegram_notifier import (
+    create_promotion_message,
+    send_telegram_message,
+)
+from .alert_logger import log_promotion_alert
 
 
 def main():
@@ -46,7 +49,10 @@ def main():
         promotion["priority"] = get_priority(promotion["score"])
 
     # Ordenamos de mayor a menor puntuación.
-    promotions.sort(key=lambda promotion: promotion["score"], reverse=True)
+    promotions.sort(
+        key=lambda promotion: promotion["score"],
+        reverse=True,
+    )
 
     print(f"Promociones encontradas: {len(promotions)}")
 
@@ -71,6 +77,7 @@ def main():
                 f"| {priority} | {score} puntos"
             )
 
+    print()
     print(f"Total en la base de datos: {total_promotions()}")
     print("Sistema iniciado correctamente.")
 

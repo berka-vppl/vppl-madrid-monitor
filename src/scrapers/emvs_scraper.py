@@ -11,7 +11,10 @@ import requests
 from bs4 import BeautifulSoup
 
 
-EMVS_URL = "https://www4.emvs.es/licitacion/UltimosExpte.do"
+EMVS_URL = (
+    "https://www4.emvs.es/licitacion/UltimosExpte.do"
+)
+
 
 HOUSING_TERMS = (
     "vivienda",
@@ -20,6 +23,7 @@ HOUSING_TERMS = (
     "promocion",
     "residencial",
 )
+
 
 PROJECT_TERMS = (
     "construcción",
@@ -33,6 +37,7 @@ PROJECT_TERMS = (
     "promocion",
 )
 
+
 EXCLUDED_TERMS = (
     "seguro",
     "facility management",
@@ -45,6 +50,67 @@ EXCLUDED_TERMS = (
     "adquisicion de viviendas",
     "reforma de la vivienda",
 )
+
+
+def _detect_protection_type(text):
+    """
+    Detecta el tipo de vivienda protegida
+    cuando la descripción lo especifica.
+    """
+
+    normalized = str(
+        text or ""
+    ).casefold()
+
+    if re.search(
+        r"\bvppl\b",
+        normalized,
+    ):
+        return "VPPL"
+
+    if (
+        "precio limitado"
+        in normalized
+    ):
+        return "VPPL"
+
+    if re.search(
+        r"\bvppb\b",
+        normalized,
+    ):
+        return "VPPB"
+
+    if (
+        "precio básico"
+        in normalized
+        or "precio basico"
+        in normalized
+    ):
+        return "VPPB"
+
+    if re.search(
+        r"\bvpp\b",
+        normalized,
+    ):
+        return "VPP"
+
+    if (
+        "vivienda protegida"
+        in normalized
+        or "viviendas protegidas"
+        in normalized
+        or "protección pública"
+        in normalized
+        or "proteccion publica"
+        in normalized
+    ):
+        return "VPP"
+
+    # Las promociones residenciales de EMVS
+    # que pasan nuestro filtro se consideran
+    # vivienda pública/protegida genérica
+    # cuando no se especifica el régimen.
+    return "VPP"
 
 
 def _is_housing_project(description):
@@ -84,7 +150,11 @@ def _find_record_text(link):
     """
 
     preferred_container = link.find_parent(
-        ["article", "tr", "li"]
+        [
+            "article",
+            "tr",
+            "li",
+        ]
     )
 
     if preferred_container is not None:
@@ -93,12 +163,16 @@ def _find_record_text(link):
             strip=True,
         )
 
-        if "descripción:" in text.casefold():
+        if (
+            "descripción:"
+            in text.casefold()
+        ):
             return text
 
     node = link
 
     for _ in range(10):
+
         node = node.parent
 
         if node is None:
@@ -109,7 +183,10 @@ def _find_record_text(link):
             strip=True,
         )
 
-        if "descripción:" in text.casefold():
+        if (
+            "descripción:"
+            in text.casefold()
+        ):
             return text
 
     return ""
@@ -129,22 +206,33 @@ def _extract_description(record_text):
             r"\s+Organismo:|$)"
         ),
         record_text,
-        flags=re.IGNORECASE | re.DOTALL,
+        flags=(
+            re.IGNORECASE
+            | re.DOTALL
+        ),
     )
 
     if not match:
         return ""
 
-    return match.group(1).strip()
+    return match.group(
+        1
+    ).strip()
 
 
-def _create_stable_id(expediente, description):
+def _create_stable_id(
+    expediente,
+    description,
+):
     """
     Crea un identificador estable utilizando
     el número de expediente de EMVS.
     """
 
-    reference = expediente or description
+    reference = (
+        expediente
+        or description
+    )
 
     normalized_reference = re.sub(
         r"\s+",
@@ -153,13 +241,20 @@ def _create_stable_id(expediente, description):
     ).strip().casefold()
 
     identifier = hashlib.sha256(
-        normalized_reference.encode("utf-8")
+        normalized_reference.encode(
+            "utf-8"
+        )
     ).hexdigest()[:16]
 
-    return f"emvs-{identifier}"
+    return (
+        f"emvs-{identifier}"
+    )
 
 
-def _extract_title(description, expediente):
+def _extract_title(
+    description,
+    expediente,
+):
     """
     Obtiene el nombre de la promoción.
     """
@@ -175,9 +270,13 @@ def _extract_title(description, expediente):
     )
 
     if name_match:
-        return name_match.group(1).strip()
+        return name_match.group(
+            1
+        ).strip()
 
-    return f"Promoción EMVS {expediente}"
+    return (
+        f"Promoción EMVS {expediente}"
+    )
 
 
 def parse_promotions(html):
@@ -186,25 +285,48 @@ def parse_promotions(html):
     al formato utilizado por el radar.
     """
 
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(
+        html,
+        "html.parser",
+    )
+
     promotions = []
     seen_ids = set()
 
-    for link in soup.find_all("a", href=True):
-        href = link.get("href", "")
+    for link in soup.find_all(
+        "a",
+        href=True,
+    ):
 
-        if "fichaExpte.do" not in href:
+        href = link.get(
+            "href",
+            "",
+        )
+
+        if (
+            "fichaExpte.do"
+            not in href
+        ):
             continue
 
-        record_text = _find_record_text(link)
-        description = _extract_description(
-            record_text
+        record_text = (
+            _find_record_text(
+                link
+            )
+        )
+
+        description = (
+            _extract_description(
+                record_text
+            )
         )
 
         if not description:
             continue
 
-        if not _is_housing_project(description):
+        if not _is_housing_project(
+            description
+        ):
             continue
 
         expediente = link.get_text(
@@ -212,19 +334,30 @@ def parse_promotions(html):
             strip=True,
         )
 
-        promotion_id = _create_stable_id(
-            expediente,
-            description,
+        promotion_id = (
+            _create_stable_id(
+                expediente,
+                description,
+            )
         )
 
         if promotion_id in seen_ids:
             continue
 
-        url = urljoin(EMVS_URL, href)
+        url = urljoin(
+            EMVS_URL,
+            href,
+        )
 
         title = _extract_title(
             description,
             expediente,
+        )
+
+        protection_type = (
+            _detect_protection_type(
+                description
+            )
         )
 
         promotions.append(
@@ -235,13 +368,18 @@ def parse_promotions(html):
                 "bedrooms": None,
                 "penthouse": False,
                 "price": None,
+                "protection_type": (
+                    protection_type
+                ),
                 "source": "EMVS Madrid",
                 "developer": "EMVS Madrid",
                 "url": url,
             }
         )
 
-        seen_ids.add(promotion_id)
+        seen_ids.add(
+            promotion_id
+        )
 
     return promotions
 
@@ -272,11 +410,13 @@ def search_promotions():
             headers=headers,
             timeout=25,
         )
+
         response.raise_for_status()
 
-    except requests.RequestException:
+    except requests.RequestException as error:
         print(
-            "No se pudo consultar EMVS Madrid."
+            "No se pudo consultar "
+            f"EMVS Madrid: {error}"
         )
         return []
 
@@ -284,14 +424,76 @@ def search_promotions():
         response.text
     )
 
+    vppl_count = sum(
+        1
+        for promotion in promotions
+        if promotion.get(
+            "protection_type"
+        ) == "VPPL"
+    )
+
+    vppb_count = sum(
+        1
+        for promotion in promotions
+        if promotion.get(
+            "protection_type"
+        ) == "VPPB"
+    )
+
+    generic_vpp_count = sum(
+        1
+        for promotion in promotions
+        if promotion.get(
+            "protection_type"
+        ) == "VPP"
+    )
+
     print(
-        "Promociones residenciales encontradas "
-        f"en EMVS: {len(promotions)}"
+        "Promociones residenciales "
+        f"encontradas en EMVS: "
+        f"{len(promotions)}"
+    )
+
+    print(
+        f"  VPPL: {vppl_count}"
+    )
+
+    print(
+        f"  VPPB: {vppb_count}"
+    )
+
+    print(
+        f"  VPP sin clasificar: "
+        f"{generic_vpp_count}"
     )
 
     return promotions
 
 
 if __name__ == "__main__":
-    for promotion in search_promotions():
-        print(promotion)
+
+    results = search_promotions()
+
+    for promotion in results:
+
+        print("-" * 60)
+
+        print(
+            f"Promoción: "
+            f"{promotion['title']}"
+        )
+
+        print(
+            f"Tipo: "
+            f"{promotion['protection_type']}"
+        )
+
+        print(
+            f"Dormitorios: "
+            f"{promotion['bedrooms']}"
+        )
+
+        print(
+            f"Enlace: "
+            f"{promotion['url']}"
+        )
