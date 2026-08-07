@@ -30,6 +30,10 @@ from .scrapers.asentis_scraper import (
     search_promotions as search_asentis,
 )
 
+from .scrapers.viveme_scraper import (
+    search_promotions as search_viveme,
+)
+
 
 def get_all_promotions():
     promotions = []
@@ -58,6 +62,10 @@ def get_all_promotions():
         (
             "Asentis",
             search_asentis,
+        ),
+        (
+            "Víveme",
+            search_viveme,
         ),
     ]
 
