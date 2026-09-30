@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Descargar proyecto
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Preparar Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
           cache: "pip"
@@ -26,7 +26,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Recuperar base de datos
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: database
           key: vpp-database-${{ github.run_id }}
